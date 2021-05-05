@@ -28,8 +28,8 @@ func main() {
 	logger.Println("Initializing Chat")
 
 	broadcast := CausalOrderWaitingBroadcast.Module{
-		Send:      make(chan CausalOrderWaitingBroadcast.SendMessage),
-		Deliver:   make(chan CausalOrderWaitingBroadcast.DeliverMessage),
+		Send:      make(chan CausalOrderWaitingBroadcast.SendMessageRequest),
+		Deliver:   make(chan CausalOrderWaitingBroadcast.DeliverMessageRequest),
 		Me:        index,
 		Addresses: append(addresses, myAddress),
 		Logger:    logger,
@@ -43,7 +43,7 @@ func main() {
 		for {
 			if scanner.Scan() {
 				msg := scanner.Text()
-				req := CausalOrderWaitingBroadcast.SendMessage{Message: msg}
+				req := CausalOrderWaitingBroadcast.SendMessageRequest{Message: msg}
 				broadcast.Send <- req
 			}
 		}
