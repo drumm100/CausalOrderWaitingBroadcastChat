@@ -4,7 +4,6 @@ import (
 	"andriuslima/CausalOrderWaitingBroadcastChat/CausalOrderWaitingBroadcast/BestEffortBroadcast/PP2PLink"
 	"encoding/json"
 	"fmt"
-	"log"
 )
 
 type ReqMessage struct {
@@ -22,10 +21,9 @@ type IndMessage struct {
 }
 
 type Module struct {
-	Me     int
-	Req    chan ReqMessage
-	Ind    chan IndMessage
-	Logger *log.Logger
+	Me  int
+	Req chan ReqMessage
+	Ind chan IndMessage
 
 	Pp2plink PP2PLink.Module
 }
@@ -33,10 +31,9 @@ type Module struct {
 func (module *Module) Init(address string) {
 	module.log("Initializing Best Effort Broadcast")
 	module.Pp2plink = PP2PLink.Module{
-		Me:     module.Me,
-		Req:    make(chan PP2PLink.ReqMessage),
-		Ind:    make(chan PP2PLink.IndMessage),
-		Logger: module.Logger,
+		Me:  module.Me,
+		Req: make(chan PP2PLink.ReqMessage),
+		Ind: make(chan PP2PLink.IndMessage),
 	}
 	module.Pp2plink.Init(address)
 	module.Start()
@@ -93,7 +90,7 @@ func BEB2PP2PLink(message ReqMessage) PP2PLink.ReqMessage {
 }
 
 func (module *Module) log(msg string) {
-	module.Logger.Printf("[BEB] - %v", msg)
+	fmt.Printf("[BEB] - %v\n", msg)
 }
 
 func PP2PLinkBEB(message PP2PLink.IndMessage) IndMessage {

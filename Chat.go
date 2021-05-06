@@ -4,10 +4,8 @@ import (
 	"andriuslima/CausalOrderWaitingBroadcastChat/CausalOrderWaitingBroadcast"
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
-	"time"
 )
 
 func main() {
@@ -23,16 +21,13 @@ func main() {
 	fmt.Printf("Process address: %v \n", myAddress)
 	fmt.Printf("Process index: %v \n", index)
 
-	logger := createLogger(index)
-
-	logger.Println("Initializing Chat")
+	fmt.Println("Initializing Chat")
 
 	broadcast := CausalOrderWaitingBroadcast.Module{
 		Send:      make(chan CausalOrderWaitingBroadcast.SendMessageRequest),
 		Deliver:   make(chan CausalOrderWaitingBroadcast.DeliverMessageRequest),
 		Me:        index,
 		Addresses: append(addresses, myAddress),
-		Logger:    logger,
 	}
 
 	broadcast.Init(myAddress)
@@ -53,27 +48,15 @@ func main() {
 	go func() {
 		for {
 			in := <-broadcast.Deliver
-			fmt.Printf("[%v] says: %v \n", in.Process, in.Message)
+			if in.Process != index {
+				fmt.Printf("[%v] says: %v \n", in.Process, in.Message)
+			}
 		}
 	}()
 
 	blq := make(chan int)
 	<-blq
-	logger.Println("Initializing Chat done")
-}
-
-func createLogger(index int) *log.Logger {
-	file := createLogFile(index)
-	return log.New(file, fmt.Sprintf("[%v] ", index), log.LstdFlags)
-}
-
-func createLogFile(index int) *os.File {
-	logFile, err := os.Create(fmt.Sprintf("logs/chat_%v_%v.log", index, time.Now().Unix()))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return logFile
+	fmt.Println("Initializing Chat done")
 }
 
 func validateArgs() {

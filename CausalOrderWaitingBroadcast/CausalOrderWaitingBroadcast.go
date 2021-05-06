@@ -3,7 +3,6 @@ package CausalOrderWaitingBroadcast
 import (
 	"andriuslima/CausalOrderWaitingBroadcastChat/CausalOrderWaitingBroadcast/BestEffortBroadcast"
 	"fmt"
-	"log"
 )
 
 type SendMessageRequest struct {
@@ -21,7 +20,6 @@ type Module struct {
 	Deliver   chan DeliverMessageRequest
 	Me        int
 	Addresses []string
-	Logger    *log.Logger
 
 	BEB     BestEffortBroadcast.Module
 	V       []int
@@ -32,10 +30,9 @@ type Module struct {
 func (module *Module) Init(address string) {
 	module.log("Initializing Causal Order Broadcast")
 	module.BEB = BestEffortBroadcast.Module{
-		Me:     module.Me,
-		Req:    make(chan BestEffortBroadcast.ReqMessage),
-		Ind:    make(chan BestEffortBroadcast.IndMessage),
-		Logger: module.Logger,
+		Me:  module.Me,
+		Req: make(chan BestEffortBroadcast.ReqMessage),
+		Ind: make(chan BestEffortBroadcast.IndMessage),
 	}
 
 	module.V = make([]int, len(module.Addresses)+1) // +2 so each process has it's own index.
@@ -57,7 +54,7 @@ func (module *Module) Start() {
 			case msg := <-module.Send:
 				module.DispatchMessageToBroadcast(msg)
 			case msg := <-module.BEB.Ind:
-				module.log(fmt.Sprintf("Message received from %v: %v \n", msg.Process, msg))
+				module.log(fmt.Sprintf("Message received from %v: %v", msg.Process, msg))
 				module.Pending = append(module.Pending, COBFromBEB(msg))
 				module.ProcessPendingQueue()
 			}
@@ -78,7 +75,7 @@ func (module *Module) DispatchMessageToBroadcast(message SendMessageRequest) {
 		Process:   module.Me,
 	}
 	module.log(fmt.Sprintf("LSN: %v, V: %v, W: %v \n", module.LSN, module.V, W))
-	module.log(fmt.Sprintf("Message sended to BestEffortBroadcast: %v \n", req))
+	module.log(fmt.Sprintf("Message sended to BestEffortBroadcast: %v", req))
 	module.BEB.Req <- req
 }
 
@@ -100,7 +97,7 @@ func (module *Module) ProcessPendingQueue() {
 func (module *Module) DeliversMessage(msg DeliverMessageRequest) {
 	module.V[msg.Process] = module.V[msg.Process] + 1
 	module.Deliver <- msg
-	module.log(fmt.Sprintf("Message delivered from %v: %v \n", msg.Process, msg))
+	module.log(fmt.Sprintf("Message delivered from %v: %v", msg.Process, msg))
 }
 
 // retrieveNextMessage function calculates if there is a message in the Pending queue that can be delivered.
@@ -119,7 +116,7 @@ func (module *Module) retrieveNextMessage() (bool, DeliverMessageRequest) {
 
 // happenedBefore function receives a DeliverMessageRequest and calculates if this message logical clock W happened before the process logical clock V
 // W <= V -> for every i = 1..n that W[i] <= V[i}
-func (module *Module) happenedBefore(msg DeliverMessageRequest) bool {
+func (module Module) happenedBefore(msg DeliverMessageRequest) bool {
 	for i := range msg.W {
 		if module.V[i] < msg.W[i] {
 			return false
@@ -137,5 +134,5 @@ func COBFromBEB(message BestEffortBroadcast.IndMessage) DeliverMessageRequest {
 }
 
 func (module *Module) log(msg string) {
-	module.Logger.Printf("[COB] - %v", msg)
+	fmt.Printf("[COB] - %v\n", msg)
 }

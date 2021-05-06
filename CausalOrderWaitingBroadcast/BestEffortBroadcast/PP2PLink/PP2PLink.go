@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -27,12 +26,11 @@ type IndMessage struct {
 }
 
 type Module struct {
-	Me     int
-	Ind    chan IndMessage
-	Req    chan ReqMessage
-	Run    bool
-	Cache  map[string]net.Conn
-	Logger *log.Logger
+	Me    int
+	Ind   chan IndMessage
+	Req   chan ReqMessage
+	Run   bool
+	Cache map[string]net.Conn
 }
 
 func (module *Module) Init(address string) {
@@ -137,7 +135,7 @@ func (module *Module) Send(message ReqMessage) {
 }
 
 func (module *Module) log(msg string) {
-	module.Logger.Printf("[LINK] - %v", msg)
+	fmt.Printf("[LINK] - %v\n", msg)
 }
 
 func StringToMessage(s string) Message {
